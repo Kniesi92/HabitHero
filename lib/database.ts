@@ -51,24 +51,6 @@ export async function getActivities(): Promise<Activity[]> {
   return data || []
 }
 
-// Aktivitäten nach Kategorie laden
-export async function getActivitiesByCategory(category: string): Promise<Activity[]> {
-  const supabase = createClient()
-
-  const { data, error } = await supabase
-    .from("activities")
-    .select("*")
-    .eq("category", category)
-    .order("points", { ascending: false })
-
-  if (error) {
-    console.error("❌ Fehler beim Laden der Aktivitäten nach Kategorie:", error)
-    throw error
-  }
-
-  return data || []
-}
-
 // Heutige Aktivitäts-Logs eines Benutzers laden
 export async function getTodayActivityLogs(userId: string): Promise<ActivityLog[]> {
   const supabase = createClient()
@@ -171,67 +153,79 @@ export async function getTodayPoints(userId: string): Promise<number> {
   return logs.reduce((total, log) => total + log.points_earned, 0)
 }
 
-// Benutzer-Profil laden oder erstellen (verbesserte Version)
+// Benutzer-Profil laden oder erstellen (ROBUSTE VERSION)
 export async function getUserProfile(userId: string): Promise<UserProfile> {
   const supabase = createClient()
 
   console.log("🔍 Lade Profil für Benutzer:", userId)
 
-  // Versuche das Profil zu laden
-  const { data, error } = await supabase.from("user_profiles").select("*").eq("id", userId).maybeSingle()
+  try {
+    // Versuche das Profil zu laden
+    const { data, error } = await supabase.from("user_profiles").select("*").eq("id", userId).maybeSingle()
 
-  if (error) {
-    console.error("❌ Fehler beim Laden des Benutzer-Profils:", error)
+    if (error) {
+      console.error("❌ Fehler beim Laden des Benutzer-Profils:", error)
+      throw error
+    }
+
+    // Wenn Profil existiert, zurückgeben
+    if (data) {
+      console.log("✅ Profil gefunden:", data)
+      return data
+    }
+
+    // Wenn kein Profil existiert, Standard-Profil erstellen
+    console.log("📝 Kein Profil gefunden, erstelle Standard-Profil...")
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+    const defaultName = user?.email?.split("@")[0] || "Benutzer"
+
+    // Erstelle minimales Profil
+    const { data: newProfile, error: createError } = await supabase
+      .from("user_profiles")
+      .insert({
+        id: userId,
+        name: defaultName,
+        activity_level: "moderate",
+        daily_calorie_goal: 2000,
+        daily_points_goal: 50,
+      })
+      .select()
+      .single()
+
+    if (createError) {
+      console.error("❌ Fehler beim Erstellen des Standard-Profils:", createError)
+
+      // Fallback: Versuche nochmal zu laden (falls zwischenzeitlich erstellt)
+      const { data: fallbackData } = await supabase.from("user_profiles").select("*").eq("id", userId).maybeSingle()
+
+      if (fallbackData) {
+        console.log("✅ Profil im Fallback gefunden:", fallbackData)
+        return fallbackData
+      }
+
+      throw createError
+    }
+
+    console.log("✅ Standard-Profil erstellt:", newProfile)
+    return newProfile
+  } catch (error) {
+    console.error("💥 Unerwarteter Fehler beim Profil-Management:", error)
     throw error
   }
-
-  // Wenn Profil existiert, zurückgeben
-  if (data) {
-    console.log("✅ Profil gefunden:", data)
-    return data
-  }
-
-  // Wenn kein Profil existiert, Standard-Profil erstellen
-  console.log("📝 Kein Profil gefunden, erstelle Standard-Profil...")
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  const defaultName = user?.email?.split("@")[0] || "Benutzer"
-
-  // Erstelle minimales Profil ohne updated_at (wird durch Trigger gesetzt)
-  const { data: newProfile, error: createError } = await supabase
-    .from("user_profiles")
-    .insert({
-      id: userId,
-      name: defaultName,
-      activity_level: "moderate",
-      daily_calorie_goal: 2000,
-      daily_points_goal: 50,
-    })
-    .select()
-    .single()
-
-  if (createError) {
-    console.error("❌ Fehler beim Erstellen des Standard-Profils:", createError)
-    throw createError
-  }
-
-  console.log("✅ Standard-Profil erstellt:", newProfile)
-  return newProfile
 }
 
-// Benutzer-Profil aktualisieren (robuste Version)
+// Benutzer-Profil aktualisieren
 export async function upsertUserProfile(userId: string, updates: Partial<UserProfile>): Promise<UserProfile> {
   const supabase = createClient()
 
   console.log("💾 Speichere Profil-Updates:", updates)
 
-  // Bereite die Daten vor, ohne updated_at zu setzen (wird durch Trigger gesetzt)
   const updateData = {
     id: userId,
     ...updates,
-    // Entferne updated_at - wird durch Datenbank-Trigger gesetzt
   }
 
   const { data, error } = await supabase.from("user_profiles").upsert(updateData).select().single()
@@ -263,11 +257,11 @@ export function calculateCalorieGoal(
 
   // Aktivitätsfaktor
   const activityFactors = {
-    sedentary: 1.2, // Wenig/keine Bewegung
-    light: 1.375, // Leichte Aktivität 1-3 Tage/Woche
-    moderate: 1.55, // Moderate Aktivität 3-5 Tage/Woche
-    active: 1.725, // Hohe Aktivität 6-7 Tage/Woche
-    very_active: 1.9, // Sehr hohe Aktivität, körperliche Arbeit
+    sedentary: 1.2,
+    light: 1.375,
+    moderate: 1.55,
+    active: 1.725,
+    very_active: 1.9,
   }
 
   const totalCalories = bmr * activityFactors[activityLevel]

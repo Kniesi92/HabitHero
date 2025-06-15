@@ -7,15 +7,24 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error("Missing Supabase environment variables")
 }
 
-// Named export für createClient
+// Singleton Pattern - nur ein Client pro Browser
+let supabaseInstance: ReturnType<typeof createSupabaseClient> | null = null
+
 export const createClient = () => {
-  return createSupabaseClient(supabaseUrl, supabaseAnonKey, {
+  if (supabaseInstance) {
+    return supabaseInstance
+  }
+
+  supabaseInstance = createSupabaseClient(supabaseUrl, supabaseAnonKey, {
     auth: {
       persistSession: true,
       autoRefreshToken: true,
       detectSessionInUrl: true,
+      storageKey: "habitHero-auth", // Eindeutiger Storage Key
     },
   })
+
+  return supabaseInstance
 }
 
 // Server-side client für API Routes
