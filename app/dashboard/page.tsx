@@ -235,11 +235,11 @@ export default function DashboardPage() {
           </Card>
         </div>
 
-        {/* Status Info */}
+        {/* Status Info - HIER IST DIE ÄNDERUNG */}
         <Card>
           <CardHeader>
-            <CardTitle>✅ Dashboard funktioniert!</CardTitle>
-            <CardDescription>Alle Seiten sind jetzt erreichbar</CardDescription>
+            <CardTitle>🚀 Deployment-Test läuft!</CardTitle>
+            <CardDescription>Testing Vercel Auto-Deploy Funktion</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
@@ -257,14 +257,13 @@ export default function DashboardPage() {
               </div>
               <div className="flex items-center space-x-2">
                 <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span className="text-sm">✅ Supabase-Warnung behoben</span>
+                <span className="text-sm">✅ Vercel Deployment läuft stabil</span>
               </div>
             </div>
 
             <div className="mt-4 p-3 bg-green-50 rounded-lg">
               <p className="text-sm text-green-800">
-                <strong>Perfekt!</strong> Alle Grundfunktionen laufen. Als nächstes richten wir die Supabase-Datenbank
-                ein.
+                <strong>Test-Modus!</strong> Prüfen ob Push Changes → Vercel Deployment funktioniert.
               </p>
             </div>
           </CardContent>
