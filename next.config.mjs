@@ -8,10 +8,6 @@ const nextConfig = {
   },
   images: {
     unoptimized: true,
-    domains: ['images.unsplash.com'],
-  },
-  experimental: {
-    serverComponentsExternalPackages: ["@supabase/supabase-js"],
   },
 }
 
