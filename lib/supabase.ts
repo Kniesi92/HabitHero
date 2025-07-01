@@ -7,11 +7,11 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error("Missing Supabase environment variables")
 }
 
-// Globaler Singleton - wird nur einmal erstellt
-let globalSupabaseInstance: ReturnType<typeof createSupabaseClient> | null = null
+// Globale Variable für den Client
+let supabaseClient: ReturnType<typeof createSupabaseClient> | null = null
 
 export const createClient = () => {
-  // Server-side: Immer neue Instanz
+  // Server-side: Immer neue Instanz (SSR)
   if (typeof window === "undefined") {
     return createSupabaseClient(supabaseUrl, supabaseAnonKey, {
       auth: {
@@ -22,22 +22,29 @@ export const createClient = () => {
     })
   }
 
-  // Browser: Strikt ein Singleton
-  if (!globalSupabaseInstance) {
-    console.log("🔧 Erstelle einmalige Supabase-Instanz")
-    globalSupabaseInstance = createSupabaseClient(supabaseUrl, supabaseAnonKey, {
+  // Browser: Strikt nur EINE Instanz
+  if (supabaseClient === null) {
+    console.log("🔧 Erstelle EINMALIGE Supabase-Instanz")
+    supabaseClient = createSupabaseClient(supabaseUrl, supabaseAnonKey, {
       auth: {
         persistSession: true,
         autoRefreshToken: true,
         detectSessionInUrl: true,
-        storageKey: "habitHero-auth-final",
+        storageKey: "habitHero-auth-singleton",
         flowType: "pkce",
       },
     })
+
+    // Debug: Instanz-Tracking
+    if (process.env.NODE_ENV === "development") {
+      console.log("✅ Supabase Client erstellt:", supabaseClient)
+      // @ts-ignore - Für Debug-Zwecke
+      window.__supabaseClient = supabaseClient
+    }
   }
 
-  return globalSupabaseInstance
+  return supabaseClient
 }
 
-// Legacy support
+// Legacy support entfernen
 export const useSupabaseClient = createClient
