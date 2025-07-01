@@ -3,8 +3,6 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { supabase } from "@/lib/supabase"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 export default function DashboardPage() {
   const [user, setUser] = useState<any>(null)
@@ -36,8 +34,11 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div>Lädt...</div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+          <p>Dashboard wird geladen...</p>
+        </div>
       </div>
     )
   }
@@ -46,23 +47,19 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-4xl mx-auto">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">HabitHero Dashboard</h1>
-          <Button onClick={handleSignOut} variant="outline">
+          <h1 className="text-3xl font-bold text-gray-900">HabitHero Dashboard</h1>
+          <button onClick={handleSignOut} className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50">
             Abmelden
-          </Button>
+          </button>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Willkommen!</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p>Angemeldet als: {user?.email}</p>
-            <p className="mt-4 text-gray-600">
-              Dies ist eine einfache Version des Dashboards. Weitere Features werden schrittweise hinzugefügt.
-            </p>
-          </CardContent>
-        </Card>
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <h2 className="text-xl font-semibold mb-4">Willkommen!</h2>
+          <p className="text-gray-600">Angemeldet als: {user?.email}</p>
+          <p className="mt-4 text-gray-600">
+            Dies ist eine minimale Version des Dashboards. Weitere Features werden schrittweise hinzugefügt.
+          </p>
+        </div>
       </div>
     </div>
   )
