@@ -2,55 +2,45 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { useSupabase } from "@/lib/supabase-provider"
+import { supabase } from "@/lib/supabase"
 
 export default function HomePage() {
-  const [isChecking, setIsChecking] = useState(true)
+  const [loading, setLoading] = useState(true)
   const router = useRouter()
-  const supabase = useSupabase()
 
   useEffect(() => {
-    let mounted = true
-
-    const checkAuthAndRedirect = async () => {
+    const checkAuth = async () => {
       try {
         const {
           data: { session },
-          error,
         } = await supabase.auth.getSession()
 
-        if (!mounted) return
-
-        if (error) {
-          console.error("❌ Session Error:", error)
-        }
-
-        if (session?.user) {
-          router.replace("/dashboard")
+        if (session) {
+          router.push("/dashboard")
         } else {
-          router.replace("/auth")
+          router.push("/auth")
         }
       } catch (error) {
-        console.error("💥 Auth Check Error:", error)
-        if (mounted) {
-          router.replace("/auth")
-        }
+        console.error("Auth check error:", error)
+        router.push("/auth")
+      } finally {
+        setLoading(false)
       }
     }
 
-    checkAuthAndRedirect()
+    checkAuth()
+  }, [router])
 
-    return () => {
-      mounted = false
-    }
-  }, [router, supabase])
-
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-blue-50">
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
-        <p className="text-gray-600">HabitHero wird geladen...</p>
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+          <p>HabitHero wird geladen...</p>
+        </div>
       </div>
-    </div>
-  )
+    )
+  }
+
+  return null
 }
