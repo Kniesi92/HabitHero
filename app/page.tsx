@@ -2,18 +2,18 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { createClient } from "@/lib/supabase"
+import { useSupabase } from "@/lib/supabase-provider"
 
 export default function HomePage() {
   const [isChecking, setIsChecking] = useState(true)
   const router = useRouter()
+  const supabase = useSupabase()
 
   useEffect(() => {
     let mounted = true
 
     const checkAuthAndRedirect = async () => {
       try {
-        const supabase = createClient()
         const {
           data: { session },
           error,
@@ -43,7 +43,7 @@ export default function HomePage() {
     return () => {
       mounted = false
     }
-  }, [router])
+  }, [router, supabase])
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-blue-50">

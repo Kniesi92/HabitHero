@@ -3,7 +3,7 @@
 import type React from "react"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { createClient } from "@/lib/supabase"
+import { useSupabase } from "@/lib/supabase-provider"
 
 export default function DashboardLayout({
   children,
@@ -13,10 +13,10 @@ export default function DashboardLayout({
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState<any>(null)
   const router = useRouter()
+  const supabase = useSupabase()
 
   useEffect(() => {
     let mounted = true
-    const supabase = createClient()
 
     const checkAuth = async () => {
       try {
@@ -43,7 +43,7 @@ export default function DashboardLayout({
 
     checkAuth()
 
-    // Reduzierte Auth-Listener
+    // Auth-Listener
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
@@ -61,7 +61,7 @@ export default function DashboardLayout({
       mounted = false
       subscription.unsubscribe()
     }
-  }, [router])
+  }, [router, supabase])
 
   if (loading) {
     return (
