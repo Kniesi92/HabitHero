@@ -16,7 +16,7 @@ export default function AuthPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
   const router = useRouter()
-  const supabase = useSupabase() // Verwende den Context Hook
+  const supabase = useSupabase()
 
   // Login State
   const [loginEmail, setLoginEmail] = useState("")
@@ -82,7 +82,7 @@ export default function AuthPage() {
       if (data.user && data.session) {
         setMessage({ type: "success", text: "Erfolgreich angemeldet! Weiterleitung..." })
         setTimeout(() => {
-          window.location.href = "/dashboard"
+          router.push("/dashboard")
         }, 1000)
       }
     } catch (error: any) {
@@ -139,7 +139,7 @@ export default function AuthPage() {
         if (data.session) {
           setMessage({ type: "success", text: "Konto erfolgreich erstellt! Weiterleitung..." })
           setTimeout(() => {
-            window.location.href = "/dashboard"
+            router.push("/dashboard")
           }, 1000)
         } else {
           setMessage({

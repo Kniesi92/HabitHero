@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { createClient } from "@/lib/supabase"
+import { useSupabase } from "@/lib/supabase-provider"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
@@ -14,6 +14,7 @@ export default function DashboardPage() {
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const router = useRouter()
+  const supabase = useSupabase()
 
   // Beispiel-Daten für die Demo
   const todayPoints = 85
@@ -34,8 +35,6 @@ export default function DashboardPage() {
   }
 
   useEffect(() => {
-    const supabase = createClient()
-
     const checkAuth = async () => {
       try {
         const {
@@ -57,7 +56,7 @@ export default function DashboardPage() {
     }
 
     checkAuth()
-  }, [router])
+  }, [router, supabase])
 
   if (loading) {
     return (
