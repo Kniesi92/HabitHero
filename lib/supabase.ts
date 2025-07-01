@@ -7,24 +7,26 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error("Missing Supabase environment variables")
 }
 
-// Singleton Pattern - nur ein Client pro Browser
-let supabaseInstance: ReturnType<typeof createSupabaseClient> | null = null
+// Globaler Client - nur EINE Instanz pro Browser
+let globalSupabaseClient: ReturnType<typeof createSupabaseClient> | null = null
 
 export const createClient = () => {
-  if (supabaseInstance) {
-    return supabaseInstance
+  // Wenn bereits ein Client existiert, verwende ihn
+  if (globalSupabaseClient) {
+    return globalSupabaseClient
   }
 
-  supabaseInstance = createSupabaseClient(supabaseUrl, supabaseAnonKey, {
+  // Erstelle nur EINMAL einen neuen Client
+  globalSupabaseClient = createSupabaseClient(supabaseUrl, supabaseAnonKey, {
     auth: {
       persistSession: true,
       autoRefreshToken: true,
       detectSessionInUrl: true,
-      storageKey: "habitHero-auth", // Eindeutiger Storage Key
+      storageKey: "habitHero-auth",
     },
   })
 
-  return supabaseInstance
+  return globalSupabaseClient
 }
 
 // Server-side client für API Routes
@@ -43,6 +45,5 @@ export const createServerClient = () => {
   })
 }
 
-// Default export
-const supabase = createClient()
-export default supabase
+// Default export - verwende den globalen Client
+export default createClient()
