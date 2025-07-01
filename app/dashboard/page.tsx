@@ -235,35 +235,31 @@ export default function DashboardPage() {
           </Card>
         </div>
 
-        {/* Status Info - HIER IST DIE ÄNDERUNG */}
+        {/* Status Info - GEÄNDERT FÜR AUTO-DEPLOY TEST */}
         <Card>
           <CardHeader>
-            <CardTitle>🚀 Deployment-Test läuft!</CardTitle>
-            <CardDescription>Testing Vercel Auto-Deploy Funktion</CardDescription>
+            <CardTitle>🎯 AUTO-DEPLOY TEST - Funktioniert es jetzt?</CardTitle>
+            <CardDescription>Testing ob Vercel Auto-Deploy nach Settings-Änderung funktioniert</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
               <div className="flex items-center space-x-2">
                 <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span className="text-sm">✅ Authentifizierung funktioniert</span>
+                <span className="text-sm">✅ Vercel Settings geändert</span>
               </div>
               <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span className="text-sm">✅ Dashboard lädt erfolgreich</span>
+                <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                <span className="text-sm">🧪 Auto-Deploy wird getestet...</span>
               </div>
               <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span className="text-sm">✅ Alle Seiten sind erreichbar</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span className="text-sm">✅ Vercel Deployment läuft stabil</span>
+                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                <span className="text-sm">📝 Code-Änderung in v0 gemacht</span>
               </div>
             </div>
 
-            <div className="mt-4 p-3 bg-green-50 rounded-lg">
-              <p className="text-sm text-green-800">
-                <strong>Test-Modus!</strong> Prüfen ob Push Changes → Vercel Deployment funktioniert.
+            <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+              <p className="text-sm text-blue-800">
+                <strong>Wenn du diesen Text siehst, funktioniert Auto-Deploy wieder! 🎉</strong>
               </p>
             </div>
           </CardContent>
