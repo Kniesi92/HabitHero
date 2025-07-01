@@ -1,7 +1,7 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { useSupabaseClient } from "@/lib/supabase"
+import { createClient } from "@/lib/supabase"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
@@ -13,25 +13,15 @@ interface HeaderProps {
 
 export function Header({ user }: HeaderProps) {
   const router = useRouter()
-  const supabase = useSupabaseClient() // Verwende Hook
   const points = 42 // TODO: Echte Punkte aus Datenbank laden
 
   const handleSignOut = async () => {
     try {
-      console.log("👋 Benutzer meldet sich ab...")
-
-      const { error } = await supabase.auth.signOut()
-
-      if (error) {
-        console.error("❌ Sign Out Error:", error)
-        return
-      }
-
-      console.log("✅ Erfolgreich abgemeldet")
-      router.push("/auth")
-      router.refresh()
+      const supabase = createClient()
+      await supabase.auth.signOut()
+      router.replace("/auth")
     } catch (error) {
-      console.error("💥 Unexpected Sign Out Error:", error)
+      console.error("Sign out error:", error)
     }
   }
 
