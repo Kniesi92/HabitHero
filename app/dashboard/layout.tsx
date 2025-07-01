@@ -3,7 +3,7 @@
 import type React from "react"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { useSupabase } from "@/lib/supabase-provider"
+import { createClient } from "@/lib/supabase"
 
 export default function DashboardLayout({
   children,
@@ -13,7 +13,7 @@ export default function DashboardLayout({
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState<any>(null)
   const router = useRouter()
-  const supabase = useSupabase()
+  const supabase = createClient()
 
   useEffect(() => {
     let mounted = true

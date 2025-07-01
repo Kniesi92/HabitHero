@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+import { createClient } from "@/lib/supabase"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -39,7 +39,7 @@ export default function ProfilePage() {
     daily_calorie_goal: "2000",
   })
 
-  const supabase = createClientComponentClient()
+  const supabase = createClient()
   const router = useRouter()
 
   // Daten laden
@@ -100,7 +100,7 @@ export default function ProfilePage() {
         }))
       }
     }
-  }, [formData.age, formData.height, formData.weight, formData.activity_level])
+  }, [formData]) // Updated to include formData as a dependency
 
   // Form-Handler
   const handleInputChange = (field: string, value: string) => {

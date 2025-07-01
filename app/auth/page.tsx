@@ -1,10 +1,9 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { supabase } from "@/lib/supabase"
+import { createClient } from "@/lib/supabase"
 
 export default function AuthPage() {
   const [email, setEmail] = useState("")
@@ -13,6 +12,7 @@ export default function AuthPage() {
   const [isSignUp, setIsSignUp] = useState(false)
   const [message, setMessage] = useState("")
   const router = useRouter()
+  const supabase = createClient()
 
   useEffect(() => {
     const checkExistingSession = async () => {
@@ -29,7 +29,7 @@ export default function AuthPage() {
     }
 
     checkExistingSession()
-  }, [router])
+  }, [router, supabase])
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault()
