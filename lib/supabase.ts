@@ -7,16 +7,32 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error("Missing Supabase environment variables")
 }
 
-// Einfacher Client - keine Singleton-Komplexität
+// Singleton client für Browser
+let supabaseInstance: ReturnType<typeof createSupabaseClient> | null = null
+
 export const createClient = () => {
+  // Nur im Browser einen Singleton verwenden
+  if (typeof window !== "undefined") {
+    if (!supabaseInstance) {
+      supabaseInstance = createSupabaseClient(supabaseUrl, supabaseAnonKey, {
+        auth: {
+          persistSession: true,
+          autoRefreshToken: true,
+          detectSessionInUrl: true,
+          storageKey: "habitHero-auth",
+          flowType: "pkce",
+        },
+      })
+    }
+    return supabaseInstance
+  }
+
+  // Server-side: Immer neue Instanz
   return createSupabaseClient(supabaseUrl, supabaseAnonKey, {
     auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-      detectSessionInUrl: true,
-      storageKey: "habitHero-simple",
-      // Reduziere die Anzahl der Auth-Listener
-      flowType: "pkce",
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
     },
   })
 }
@@ -37,17 +53,7 @@ export const createServerClient = () => {
   })
 }
 
-// -----------------------------------------------------------------------------
-// React helper - keeps legacy components working
-// -----------------------------------------------------------------------------
-/**
- * Simple helper hook that returns a new Supabase client.
- * NOTE: Because we no longer enforce a singleton on the browser,
- * this hook is merely a thin wrapper around `createClient()`.
- * You can gradually migrate existing components to `createClient()` directly.
- */
+// Legacy hook für bestehende Komponenten
 export const useSupabaseClient = () => {
-  // We intentionally create a fresh client per call; this avoids the
-  // earlier multiple-instance problems created by stale singletons.
   return createClient()
 }

@@ -3,7 +3,7 @@
 import type React from "react"
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { useSupabaseClient } from "@/lib/supabase"
+import { createClient } from "@/lib/supabase"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -16,7 +16,6 @@ export default function AuthPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
   const router = useRouter()
-  const supabase = useSupabaseClient() // Verwende Hook
 
   // Login State
   const [loginEmail, setLoginEmail] = useState("")
@@ -27,39 +26,46 @@ export default function AuthPage() {
   const [registerPassword, setRegisterPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
 
-  // Prüfe ob Benutzer bereits angemeldet ist
+  // Einmalige Session-Prüfung
   useEffect(() => {
+    let mounted = true
+
     const checkExistingSession = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
-      if (session?.user) {
-        console.log("👤 Benutzer bereits angemeldet, weiterleiten...")
-        router.replace("/dashboard")
+      try {
+        const supabase = createClient()
+        const {
+          data: { session },
+        } = await supabase.auth.getSession()
+
+        if (mounted && session?.user) {
+          console.log("👤 Benutzer bereits angemeldet, weiterleiten...")
+          router.replace("/dashboard")
+        }
+      } catch (error) {
+        console.error("Session check error:", error)
       }
     }
 
     checkExistingSession()
-  }, [router, supabase])
+
+    return () => {
+      mounted = false
+    }
+  }, [router])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
     setMessage(null)
 
-    console.log("🔐 Versuche Anmeldung für:", loginEmail)
-
     try {
+      const supabase = createClient()
       const { data, error } = await supabase.auth.signInWithPassword({
         email: loginEmail.trim(),
         password: loginPassword,
       })
 
-      console.log("📊 Login Response:", { data, error })
-
       if (error) {
-        console.error("❌ Login Error:", error)
-
         let errorMessage = "Anmeldung fehlgeschlagen."
 
         if (error.message.includes("Invalid login credentials")) {
@@ -75,17 +81,13 @@ export default function AuthPage() {
       }
 
       if (data.user && data.session) {
-        console.log("✅ Login erfolgreich:", data.user.email)
         setMessage({ type: "success", text: "Erfolgreich angemeldet! Weiterleitung..." })
-
-        // Warte kurz, dann forciere Weiterleitung
         setTimeout(() => {
-          console.log("🚀 Weiterleitung zum Dashboard...")
-          window.location.href = "/dashboard" // Forciere komplette Seitenneuladen
+          window.location.href = "/dashboard"
         }, 1000)
       }
     } catch (error: any) {
-      console.error("💥 Unexpected Login Error:", error)
+      console.error("Login error:", error)
       setMessage({
         type: "error",
         text: "Ein unerwarteter Fehler ist aufgetreten. Bitte versuche es erneut.",
@@ -100,8 +102,6 @@ export default function AuthPage() {
     setIsLoading(true)
     setMessage(null)
 
-    console.log("📝 Versuche Registrierung für:", registerEmail)
-
     if (registerPassword !== confirmPassword) {
       setMessage({ type: "error", text: "Passwörter stimmen nicht überein." })
       setIsLoading(false)
@@ -115,6 +115,7 @@ export default function AuthPage() {
     }
 
     try {
+      const supabase = createClient()
       const { data, error } = await supabase.auth.signUp({
         email: registerEmail.trim(),
         password: registerPassword,
@@ -123,11 +124,7 @@ export default function AuthPage() {
         },
       })
 
-      console.log("📊 Register Response:", { data, error })
-
       if (error) {
-        console.error("❌ Register Error:", error)
-
         let errorMessage = "Registrierung fehlgeschlagen."
 
         if (error.message.includes("User already registered")) {
@@ -141,17 +138,12 @@ export default function AuthPage() {
       }
 
       if (data.user) {
-        console.log("✅ Registrierung erfolgreich:", data.user.email)
-
         if (data.session) {
-          // Benutzer ist sofort angemeldet
           setMessage({ type: "success", text: "Konto erfolgreich erstellt! Weiterleitung..." })
           setTimeout(() => {
-            console.log("🚀 Weiterleitung zum Dashboard nach Registrierung...")
             window.location.href = "/dashboard"
           }, 1000)
         } else {
-          // E-Mail-Bestätigung erforderlich
           setMessage({
             type: "success",
             text: "Konto erstellt! Bitte bestätige deine E-Mail-Adresse, dann kannst du dich anmelden.",
@@ -159,7 +151,7 @@ export default function AuthPage() {
         }
       }
     } catch (error: any) {
-      console.error("💥 Unexpected Register Error:", error)
+      console.error("Register error:", error)
       setMessage({
         type: "error",
         text: "Ein unerwarteter Fehler ist aufgetreten. Bitte versuche es erneut.",

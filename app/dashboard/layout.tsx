@@ -15,6 +15,7 @@ export default function DashboardLayout({
   const router = useRouter()
 
   useEffect(() => {
+    let mounted = true
     const supabase = createClient()
 
     const checkAuth = async () => {
@@ -22,6 +23,8 @@ export default function DashboardLayout({
         const {
           data: { session },
         } = await supabase.auth.getSession()
+
+        if (!mounted) return
 
         if (!session?.user) {
           router.replace("/auth")
@@ -32,16 +35,20 @@ export default function DashboardLayout({
         setLoading(false)
       } catch (error) {
         console.error("Auth check failed:", error)
-        router.replace("/auth")
+        if (mounted) {
+          router.replace("/auth")
+        }
       }
     }
 
     checkAuth()
 
-    // Auth state listener
+    // Reduzierte Auth-Listener
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!mounted) return
+
       if (event === "SIGNED_OUT" || !session) {
         router.replace("/auth")
       } else if (event === "SIGNED_IN" && session) {
@@ -51,6 +58,7 @@ export default function DashboardLayout({
     })
 
     return () => {
+      mounted = false
       subscription.unsubscribe()
     }
   }, [router])
@@ -70,6 +78,5 @@ export default function DashboardLayout({
     return null
   }
 
-  // Einfaches Layout ohne komplexe Navigation
   return <div className="min-h-screen bg-gray-50">{children}</div>
 }
