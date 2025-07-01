@@ -1,46 +1,20 @@
-"use client"
-
-import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
-import { supabase } from "@/lib/supabase"
-
 export default function HomePage() {
-  const [loading, setLoading] = useState(true)
-  const router = useRouter()
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const {
-          data: { session },
-        } = await supabase.auth.getSession()
-
-        if (session) {
-          router.push("/dashboard")
-        } else {
-          router.push("/auth")
-        }
-      } catch (error) {
-        console.error("Auth check error:", error)
-        router.push("/auth")
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    checkAuth()
-  }, [router])
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">HabitHero wird geladen...</p>
+  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="text-center">
+        <h1 className="text-4xl font-bold text-green-600 mb-4">HabitHero</h1>
+        <p className="text-gray-600 mb-8">Dein Habit Tracker</p>
+        <div className="space-y-4">
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <h2 className="text-xl font-semibold mb-2">🎯 Willkommen!</h2>
+            <p className="text-gray-600">Die App wird schrittweise aufgebaut.</p>
+          </div>
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <h3 className="font-medium mb-2">✅ Status: Deployment erfolgreich</h3>
+            <p className="text-sm text-gray-500">Basis-App läuft, Features folgen...</p>
+          </div>
         </div>
       </div>
-    )
-  }
-
-  return null
+    </div>
+  )
 }
