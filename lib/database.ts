@@ -33,131 +33,9 @@ export interface UserProfile {
   updated_at: string
 }
 
-// Alle verfügbaren Aktivitäten laden
-export async function getActivities(): Promise<Activity[]> {
-  const supabase = createClient()
-
-  const { data, error } = await supabase
-    .from("activities")
-    .select("*")
-    .order("category", { ascending: true })
-    .order("points", { ascending: false })
-
-  if (error) {
-    console.error("❌ Fehler beim Laden der Aktivitäten:", error)
-    throw error
-  }
-
-  return data || []
-}
-
-// Heutige Aktivitäts-Logs eines Benutzers laden
-export async function getTodayActivityLogs(userId: string): Promise<ActivityLog[]> {
-  const supabase = createClient()
-  const today = new Date().toISOString().split("T")[0] // YYYY-MM-DD Format
-
-  const { data, error } = await supabase
-    .from("activity_logs")
-    .select(`
-      *,
-      activities (
-        id,
-        title,
-        points,
-        is_positive,
-        category
-      )
-    `)
-    .eq("user_id", userId)
-    .gte("completed_at", `${today}T00:00:00.000Z`)
-    .lt("completed_at", `${today}T23:59:59.999Z`)
-    .order("completed_at", { ascending: false })
-
-  if (error) {
-    console.error("❌ Fehler beim Laden der heutigen Aktivitäts-Logs:", error)
-    throw error
-  }
-
-  return data || []
-}
-
-// Aktivität als erledigt markieren
-export async function logActivity(userId: string, activityId: string): Promise<ActivityLog> {
-  const supabase = createClient()
-
-  console.log("🔍 Lade Aktivität:", activityId)
-
-  // Erst die Aktivität laden, um die Punkte zu bekommen
-  const { data: activity, error: activityError } = await supabase
-    .from("activities")
-    .select("*")
-    .eq("id", activityId)
-    .single()
-
-  if (activityError || !activity) {
-    console.error("❌ Aktivität nicht gefunden:", activityError)
-    throw activityError || new Error("Aktivität nicht gefunden")
-  }
-
-  console.log("✅ Aktivität gefunden:", activity.title, activity.points)
-
-  // Aktivitäts-Log erstellen
-  const logData = {
-    user_id: userId,
-    activity_id: activityId,
-    points_earned: activity.points,
-    completed_at: new Date().toISOString(),
-  }
-
-  console.log("💾 Erstelle Log:", logData)
-
-  const { data, error } = await supabase
-    .from("activity_logs")
-    .insert(logData)
-    .select(`
-      *,
-      activities (
-        id,
-        title,
-        points,
-        is_positive,
-        category
-      )
-    `)
-    .single()
-
-  if (error) {
-    console.error("❌ Fehler beim Loggen der Aktivität:", error)
-    throw error
-  }
-
-  console.log("✅ Log erstellt:", data)
-  return data
-}
-
-// Aktivitäts-Log löschen (für "Rückgängig")
-export async function removeActivityLog(logId: string): Promise<void> {
-  const supabase = createClient()
-
-  const { error } = await supabase.from("activity_logs").delete().eq("id", logId)
-
-  if (error) {
-    console.error("❌ Fehler beim Löschen des Aktivitäts-Logs:", error)
-    throw error
-  }
-}
-
-// Heutige Punkte eines Benutzers berechnen
-export async function getTodayPoints(userId: string): Promise<number> {
-  const logs = await getTodayActivityLogs(userId)
-  return logs.reduce((total, log) => total + log.points_earned, 0)
-}
-
-// Benutzer-Profil laden oder erstellen (ROBUSTE VERSION)
+// Benutzer-Profil laden oder erstellen (WENIGER LOGS)
 export async function getUserProfile(userId: string): Promise<UserProfile> {
   const supabase = createClient()
-
-  console.log("🔍 Lade Profil für Benutzer:", userId)
 
   try {
     // Versuche das Profil zu laden
@@ -170,12 +48,15 @@ export async function getUserProfile(userId: string): Promise<UserProfile> {
 
     // Wenn Profil existiert, zurückgeben
     if (data) {
-      console.log("✅ Profil gefunden:", data)
+      // Nur einmal loggen, nicht bei jedem Aufruf
+      if (process.env.NODE_ENV === "development") {
+        console.log("✅ Profil gefunden für:", userId.slice(0, 8) + "...")
+      }
       return data
     }
 
     // Wenn kein Profil existiert, Standard-Profil erstellen
-    console.log("📝 Kein Profil gefunden, erstelle Standard-Profil...")
+    console.log("📝 Erstelle Standard-Profil für neuen Benutzer")
 
     const {
       data: { user },
@@ -202,14 +83,14 @@ export async function getUserProfile(userId: string): Promise<UserProfile> {
       const { data: fallbackData } = await supabase.from("user_profiles").select("*").eq("id", userId).maybeSingle()
 
       if (fallbackData) {
-        console.log("✅ Profil im Fallback gefunden:", fallbackData)
+        console.log("✅ Profil im Fallback gefunden")
         return fallbackData
       }
 
       throw createError
     }
 
-    console.log("✅ Standard-Profil erstellt:", newProfile)
+    console.log("✅ Standard-Profil erstellt")
     return newProfile
   } catch (error) {
     console.error("💥 Unerwarteter Fehler beim Profil-Management:", error)
@@ -220,8 +101,6 @@ export async function getUserProfile(userId: string): Promise<UserProfile> {
 // Benutzer-Profil aktualisieren
 export async function upsertUserProfile(userId: string, updates: Partial<UserProfile>): Promise<UserProfile> {
   const supabase = createClient()
-
-  console.log("💾 Speichere Profil-Updates:", updates)
 
   const updateData = {
     id: userId,
@@ -235,7 +114,7 @@ export async function upsertUserProfile(userId: string, updates: Partial<UserPro
     throw error
   }
 
-  console.log("✅ Profil gespeichert:", data)
+  console.log("✅ Profil gespeichert")
   return data
 }
 

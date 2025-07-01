@@ -7,8 +7,10 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error("Missing Supabase environment variables")
 }
 
-// Singleton-Instanz für Browser
-let browserClient: ReturnType<typeof createSupabaseClient> | null = null
+// GLOBALER Singleton - überlebt Hot Reloads
+declare global {
+  var __supabase: ReturnType<typeof createSupabaseClient> | undefined
+}
 
 export function createClient() {
   // Server-side: Immer neue Instanz
@@ -22,11 +24,11 @@ export function createClient() {
     })
   }
 
-  // Browser-side: Singleton
-  if (!browserClient) {
-    console.log("🔧 Erstelle Supabase Browser-Client")
+  // Browser-side: Globaler Singleton (überlebt Hot Reloads)
+  if (!globalThis.__supabase) {
+    console.log("🔧 Erstelle GLOBALEN Supabase-Client")
 
-    browserClient = createSupabaseClient(supabaseUrl, supabaseAnonKey, {
+    globalThis.__supabase = createSupabaseClient(supabaseUrl, supabaseAnonKey, {
       auth: {
         persistSession: true,
         autoRefreshToken: true,
@@ -35,7 +37,12 @@ export function createClient() {
         storageKey: "habitHero-auth",
       },
     })
+
+    // Debug-Info
+    if (process.env.NODE_ENV === "development") {
+      console.log("✅ Globaler Supabase-Client erstellt")
+    }
   }
 
-  return browserClient
+  return globalThis.__supabase
 }
