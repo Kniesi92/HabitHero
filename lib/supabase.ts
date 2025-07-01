@@ -7,53 +7,37 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error("Missing Supabase environment variables")
 }
 
-// Singleton client für Browser
-let supabaseInstance: ReturnType<typeof createSupabaseClient> | null = null
+// Globaler Singleton - wird nur einmal erstellt
+let globalSupabaseInstance: ReturnType<typeof createSupabaseClient> | null = null
 
 export const createClient = () => {
-  // Nur im Browser einen Singleton verwenden
-  if (typeof window !== "undefined") {
-    if (!supabaseInstance) {
-      supabaseInstance = createSupabaseClient(supabaseUrl, supabaseAnonKey, {
-        auth: {
-          persistSession: true,
-          autoRefreshToken: true,
-          detectSessionInUrl: true,
-          storageKey: "habitHero-auth",
-          flowType: "pkce",
-        },
-      })
-    }
-    return supabaseInstance
-  }
-
   // Server-side: Immer neue Instanz
-  return createSupabaseClient(supabaseUrl, supabaseAnonKey, {
-    auth: {
-      persistSession: false,
-      autoRefreshToken: false,
-      detectSessionInUrl: false,
-    },
-  })
-}
-
-// Server-side client
-export const createServerClient = () => {
-  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
-
-  if (!supabaseServiceKey) {
-    throw new Error("Missing Supabase service role key")
+  if (typeof window === "undefined") {
+    return createSupabaseClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false,
+      },
+    })
   }
 
-  return createSupabaseClient(supabaseUrl, supabaseServiceKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  })
+  // Browser: Strikt ein Singleton
+  if (!globalSupabaseInstance) {
+    console.log("🔧 Erstelle einmalige Supabase-Instanz")
+    globalSupabaseInstance = createSupabaseClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+        storageKey: "habitHero-auth-final",
+        flowType: "pkce",
+      },
+    })
+  }
+
+  return globalSupabaseInstance
 }
 
-// Legacy hook für bestehende Komponenten
-export const useSupabaseClient = () => {
-  return createClient()
-}
+// Legacy support
+export const useSupabaseClient = createClient

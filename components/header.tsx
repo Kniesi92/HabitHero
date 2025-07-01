@@ -13,7 +13,7 @@ interface HeaderProps {
 
 export function Header({ user }: HeaderProps) {
   const router = useRouter()
-  const points = 42 // TODO: Echte Punkte aus Datenbank laden
+  const points = 42
 
   const handleSignOut = async () => {
     try {
@@ -23,6 +23,10 @@ export function Header({ user }: HeaderProps) {
     } catch (error) {
       console.error("Sign out error:", error)
     }
+  }
+
+  const handleProfileClick = () => {
+    router.push("/profile")
   }
 
   return (
@@ -53,7 +57,7 @@ export function Header({ user }: HeaderProps) {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56" align="end">
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={handleProfileClick}>
                 <UserIcon className="mr-2 h-4 w-4" />
                 <span>Profil bearbeiten</span>
               </DropdownMenuItem>
