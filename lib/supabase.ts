@@ -7,39 +7,36 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error("Missing Supabase environment variables")
 }
 
-// Globaler Singleton - wird im Browser-Window gespeichert
-declare global {
-  var __supabase_client__: ReturnType<typeof createSupabaseClient> | undefined
-}
+// Singleton-Instanz - wird nur einmal erstellt
+let supabaseInstance: ReturnType<typeof createSupabaseClient> | null = null
 
 export const createClient = () => {
-  // Prüfe ob bereits eine Instanz im globalen Scope existiert
-  if (typeof window !== "undefined" && window.__supabase_client__) {
-    console.log("🔄 Verwende existierenden Supabase Client")
-    return window.__supabase_client__
+  // Wenn bereits eine Instanz existiert, verwende sie
+  if (supabaseInstance) {
+    return supabaseInstance
   }
 
-  console.log("🆕 Erstelle neuen Supabase Client")
+  console.log("🆕 Erstelle EINMALIG Supabase Client")
 
-  // Erstelle neuen Client
-  const client = createSupabaseClient(supabaseUrl, supabaseAnonKey, {
+  // Erstelle die Instanz nur einmal
+  supabaseInstance = createSupabaseClient(supabaseUrl, supabaseAnonKey, {
     auth: {
       persistSession: true,
       autoRefreshToken: true,
       detectSessionInUrl: true,
-      storageKey: "habitHero-auth-v2", // Neue Storage-Key um alte Sessions zu clearen
+      storageKey: "habitHero-auth-final",
     },
   })
 
-  // Speichere im globalen Scope (nur im Browser)
-  if (typeof window !== "undefined") {
-    window.__supabase_client__ = client
-  }
-
-  return client
+  return supabaseInstance
 }
 
-// Server-side client für API Routes
+// Hook für React-Komponenten
+export const useSupabaseClient = () => {
+  return createClient()
+}
+
+// Server-side client
 export const createServerClient = () => {
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
@@ -54,6 +51,3 @@ export const createServerClient = () => {
     },
   })
 }
-
-// Default export
-export default createClient()

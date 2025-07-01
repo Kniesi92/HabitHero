@@ -1,7 +1,7 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { createClient } from "@/lib/supabase"
+import { useSupabaseClient } from "@/lib/supabase"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
@@ -13,7 +13,7 @@ interface HeaderProps {
 
 export function Header({ user }: HeaderProps) {
   const router = useRouter()
-  const supabase = createClient()
+  const supabase = useSupabaseClient() // Verwende Hook
   const points = 42 // TODO: Echte Punkte aus Datenbank laden
 
   const handleSignOut = async () => {

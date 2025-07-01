@@ -3,7 +3,7 @@
 import type React from "react"
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { createClient } from "@/lib/supabase"
+import { useSupabaseClient } from "@/lib/supabase"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -16,7 +16,7 @@ export default function AuthPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
   const router = useRouter()
-  const supabase = createClient()
+  const supabase = useSupabaseClient() // Verwende Hook
 
   // Login State
   const [loginEmail, setLoginEmail] = useState("")

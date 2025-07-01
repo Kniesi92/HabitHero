@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { createClient } from "@/lib/supabase"
+import { useSupabaseClient } from "@/lib/supabase"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -14,9 +14,9 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
-  const supabase = createClient()
+  const supabase = useSupabaseClient() // Verwende Hook statt direkten Import
 
-  // Beispiel-Daten (werden später durch echte Daten ersetzt)
+  // Beispiel-Daten
   const todayPoints = 85
   const pointsGoal = 100
   const todayActivities = [
@@ -41,10 +41,16 @@ export default function DashboardPage() {
       try {
         console.log("🔍 Dashboard: Prüfe Benutzer...")
 
+        // Timeout nach 10 Sekunden
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Timeout beim Laden der Session")), 10000),
+        )
+
+        const sessionPromise = supabase.auth.getSession()
         const {
           data: { session },
           error: sessionError,
-        } = await supabase.auth.getSession()
+        } = (await Promise.race([sessionPromise, timeoutPromise])) as any
 
         if (!mounted) return
 
@@ -104,6 +110,7 @@ export default function DashboardPage() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Dashboard wird geladen...</p>
+          <p className="text-sm text-gray-500 mt-2">Benutzer wird authentifiziert...</p>
         </div>
       </div>
     )
